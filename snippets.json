@@ -197,5 +197,187 @@
       { "id":"err-disk-100", "title":"100% Disk Usage Fix", "desc":"Common Windows 10/11 issue. Disable known offenders.", "shell":"cmd", "cmd":":: Disable Superfetch/SysMain:\nsc stop SysMain\nsc config SysMain start=disabled\n\n:: Disable Windows Search indexing:\nsc stop WSearch\nsc config WSearch start=disabled\n\n:: Check disk health:\nwmic diskdrive get status\nchkdsk C: /f /r", "tags":["disk","100%","usage","slow","sysmain","superfetch","error"] },
       { "id":"err-event-log", "title":"Query Specific Event Log Errors", "desc":"Pull recent errors from Event Log for troubleshooting.", "shell":"ps", "cmd":"Get-EventLog -LogName System -EntryType Error -Newest 20\nGet-EventLog -LogName Application -EntryType Error -Newest 20\n\n# Search for specific event ID:\nGet-WinEvent -FilterHashtable @{LogName='System'; ID=7031} -MaxEvents 10 | Format-List", "tags":["event","log","error","troubleshoot","viewer"] }
     ]
+  },
+  {
+    "category": "Certificate Management & Renewal",
+    "icon": "🔐",
+    "snippets": [
+      {
+        "id": "cert-check-expiry",
+        "title": "Check Certificate Expiry (Local Machine)",
+        "desc": "List all certs in the local machine store expiring within 45 days. Critical now that max cert lifetime drops to 200 days (Mar 2026) → 100 days (2027) → 47 days (2029).",
+        "shell": "ps",
+        "cmd": "Get-ChildItem Cert:\\LocalMachine\\My | Where-Object { $_.NotAfter -lt (Get-Date).AddDays(45) } | Select-Object Subject, Thumbprint, NotAfter | Sort-Object NotAfter",
+        "tags": ["certificate", "expiry", "monitor", "ssl", "tls", "47-day"]
+      },
+      {
+        "id": "cert-check-remote",
+        "title": "Check Remote SSL Certificate Expiry",
+        "desc": "Query a remote endpoint's cert expiry date. Reddit's go-to for quick checks before things break.",
+        "shell": "ps",
+        "cmd": "$url = \"google.com\"\n$port = 443\n$tcp = New-Object Net.Sockets.TcpClient($url, $port)\n$ssl = New-Object Net.Security.SslStream($tcp.GetStream())\n$ssl.AuthenticateAsClient($url)\n$cert = $ssl.RemoteCertificate\n[PSCustomObject]@{ Subject=$cert.Subject; Issuer=$cert.Issuer; Expires=[datetime]::Parse($cert.GetExpirationDateString()); Thumbprint=$cert.GetCertHashString() }\n$ssl.Dispose(); $tcp.Dispose()",
+        "tags": ["certificate", "remote", "ssl", "tls", "expiry", "check"]
+      },
+      {
+        "id": "cert-scan-multiple",
+        "title": "Scan Multiple Hosts for Cert Expiry",
+        "desc": "Bulk-scan a list of hosts and flag anything expiring within 30 days. Recommended by r/sysadmin for proactive monitoring.",
+        "shell": "ps",
+        "cmd": "$hosts = @(\"web01.domain.com\",\"mail.domain.com\",\"vpn.domain.com\")\n$threshold = 30\n$hosts | ForEach-Object {\n    try {\n        $tcp = New-Object Net.Sockets.TcpClient($_, 443)\n        $ssl = New-Object Net.Security.SslStream($tcp.GetStream())\n        $ssl.AuthenticateAsClient($_)\n        $expiry = [datetime]::Parse($ssl.RemoteCertificate.GetExpirationDateString())\n        $daysLeft = ($expiry - (Get-Date)).Days\n        [PSCustomObject]@{ Host=$_; Expires=$expiry; DaysLeft=$daysLeft; Warning=($daysLeft -le $threshold) }\n        $ssl.Dispose(); $tcp.Dispose()\n    } catch { [PSCustomObject]@{ Host=$_; Expires='ERROR'; DaysLeft=-1; Warning=$true } }\n} | Format-Table -AutoSize",
+        "tags": ["certificate", "scan", "bulk", "monitor", "expiry", "automation"]
+      },
+      {
+        "id": "cert-export-inventory",
+        "title": "Export Certificate Inventory to CSV",
+        "desc": "Dump all local machine certs to CSV for auditing. Reddit best practice: maintain a central register of all certs.",
+        "shell": "ps",
+        "cmd": "Get-ChildItem Cert:\\LocalMachine\\My | Select-Object Subject, Issuer, Thumbprint, NotBefore, NotAfter, HasPrivateKey | Export-Csv C:\\CertInventory.csv -NoTypeInformation",
+        "tags": ["certificate", "inventory", "export", "csv", "audit"]
+      },
+      {
+        "id": "cert-generate-csr",
+        "title": "Generate a New CSR (Certificate Signing Request)",
+        "desc": "Best practice per Reddit & DigiCert: always generate a NEW CSR/keypair on renewal. Never reuse old keys.",
+        "shell": "ps",
+        "cmd": "$params = @{\n    Subject = 'CN=www.domain.com'\n    KeyLength = 2048\n    KeyAlgorithm = 'RSA'\n    HashAlgorithm = 'SHA256'\n    KeyExportPolicy = 'Exportable'\n    CertStoreLocation = 'Cert:\\LocalMachine\\My'\n}\n$cert = New-SelfSignedCertificate @params\n# Export CSR using certreq:\n# certreq -new request.inf request.csr",
+        "tags": ["csr", "certificate", "request", "renewal", "keypair", "best-practice"]
+      },
+      {
+        "id": "cert-certreq-csr",
+        "title": "Generate CSR with certreq (Traditional)",
+        "desc": "Windows-native CSR generation using an INF file. Works for IIS, Exchange, and appliance cert requests.",
+        "shell": "cmd",
+        "cmd": ":: Create request.inf first, then:\ncertreq -new request.inf request.csr\n\n:: Submit to CA:\ncertreq -submit request.csr response.cer\n\n:: Install response:\ncertreq -accept response.cer",
+        "tags": ["csr", "certreq", "certificate", "iis", "exchange"]
+      },
+      {
+        "id": "cert-install-pfx",
+        "title": "Import PFX / PKCS12 Certificate",
+        "desc": "Install a certificate from a PFX file. Common step after receiving renewed cert from CA.",
+        "shell": "ps",
+        "cmd": "$pfxPath = \"C:\\Certs\\renewed-cert.pfx\"\n$pfxPass = ConvertTo-SecureString \"P@ssw0rd\" -AsPlainText -Force\nImport-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\\LocalMachine\\My -Password $pfxPass",
+        "tags": ["certificate", "import", "pfx", "pkcs12", "install", "renewal"]
+      },
+      {
+        "id": "cert-export-pfx",
+        "title": "Export Certificate to PFX",
+        "desc": "Export a cert with its private key for backup or transfer to another server.",
+        "shell": "ps",
+        "cmd": "$cert = Get-ChildItem Cert:\\LocalMachine\\My | Where-Object { $_.Subject -like '*domain.com*' }\n$pfxPass = ConvertTo-SecureString \"P@ssw0rd\" -AsPlainText -Force\nExport-PfxCertificate -Cert $cert -FilePath C:\\Certs\\backup.pfx -Password $pfxPass",
+        "tags": ["certificate", "export", "pfx", "backup", "private-key"]
+      },
+      {
+        "id": "cert-winacme-install",
+        "title": "Install win-acme (WACS) for IIS Auto-Renewal",
+        "desc": "Top Reddit recommendation for Windows/IIS. Free ACME client that auto-renews Let's Encrypt certs and binds to IIS sites.",
+        "shell": "cmd",
+        "cmd": ":: Download from https://www.win-acme.com/\n:: Extract and run:\nwacs.exe --target iis --installation iis\n\n:: For unattended renewal (creates scheduled task automatically):\nwacs.exe --target iis --siteid 1 --installation iis --accepttos --emailaddress admin@domain.com",
+        "tags": ["win-acme", "wacs", "iis", "letsencrypt", "acme", "auto-renew", "automation"]
+      },
+      {
+        "id": "cert-certifytheweb",
+        "title": "Certify The Web (IIS + Exchange Auto-Renewal)",
+        "desc": "Highly praised on r/sysadmin for managing 1000+ IIS sites. GUI-based, supports Let's Encrypt, ZeroSSL, and custom CAs. Paid for business use.",
+        "shell": "cmd",
+        "cmd": ":: Install from https://certifytheweb.com/\n:: Supports: IIS, Exchange, RDP Gateway, Apache, nginx\n:: Auto-creates scheduled renewal tasks\n:: DNS validation via Cloudflare, Route53, Azure DNS, etc.\n:: CLI renewal trigger:\ncertifytheweb renew --all",
+        "tags": ["certifytheweb", "iis", "exchange", "letsencrypt", "gui", "auto-renew"]
+      },
+      {
+        "id": "cert-posh-acme",
+        "title": "Posh-ACME (PowerShell-Native ACME Client)",
+        "desc": "Pure PowerShell Let's Encrypt client. Reddit favorite for internal sites using DNS validation. Great for automation scripts.",
+        "shell": "ps",
+        "cmd": "Install-Module -Name Posh-ACME -Scope CurrentUser\nImport-Module Posh-ACME\n\n# Set Let's Encrypt as CA:\nSet-PAServer LE_PROD\n\n# Request cert with Cloudflare DNS validation:\n$cfParams = @{ CFToken = (Read-Host 'Cloudflare API Token' -AsSecureString) }\nNew-PACertificate 'www.domain.com' -Plugin Cloudflare -PluginArgs $cfParams -AcceptTOS\n\n# Renew (call from scheduled task):\nSubmit-Renewal",
+        "tags": ["posh-acme", "powershell", "letsencrypt", "acme", "dns", "cloudflare", "automation"]
+      },
+      {
+        "id": "cert-certbot-linux",
+        "title": "Certbot Auto-Renewal (Linux)",
+        "desc": "The #1 most recommended tool across all Reddit cert threads. Installs Let's Encrypt certs and auto-renews via cron/systemd timer.",
+        "shell": "cmd",
+        "cmd": ":: Install certbot (Ubuntu/Debian):\n:: sudo apt install certbot python3-certbot-nginx\n\n:: Request cert for Nginx:\n:: sudo certbot --nginx -d www.domain.com\n\n:: Request cert with DNS challenge (for non-web or wildcard):\n:: sudo certbot certonly --manual --preferred-challenges dns -d *.domain.com\n\n:: Test auto-renewal:\n:: sudo certbot renew --dry-run\n\n:: Force renewal:\n:: sudo certbot renew --force-renewal",
+        "tags": ["certbot", "letsencrypt", "linux", "nginx", "apache", "auto-renew", "dns-challenge"]
+      },
+      {
+        "id": "cert-acme-sh",
+        "title": "acme.sh (Lightweight ACME Client)",
+        "desc": "Shell-only ACME client — no dependencies. Supports 50+ DNS providers for validation. Set up a monthly cron job and forget about it.",
+        "shell": "cmd",
+        "cmd": ":: Install:\n:: curl https://get.acme.sh | sh\n\n:: Issue cert with Cloudflare DNS:\n:: export CF_Token=\"your-api-token\"\n:: acme.sh --issue --dns dns_cf -d domain.com -d *.domain.com\n\n:: Install cert to Nginx:\n:: acme.sh --install-cert -d domain.com --key-file /etc/nginx/ssl/key.pem --fullchain-file /etc/nginx/ssl/cert.pem --reloadcmd \"systemctl reload nginx\"\n\n:: Auto-renewal is set up automatically via cron",
+        "tags": ["acme.sh", "letsencrypt", "linux", "dns", "cloudflare", "wildcard", "cron"]
+      },
+      {
+        "id": "cert-reverse-proxy",
+        "title": "Reverse Proxy for Appliance Cert Offload",
+        "desc": "Reddit's top solution for devices that can't automate certs (iDRAC, ESXi, IoT). Let the proxy handle the public cert; backend uses self-signed.",
+        "shell": "cmd",
+        "cmd": ":: Caddy (simplest — auto HTTPS built in):\n:: caddy reverse-proxy --from https://app.domain.com --to http://10.0.0.5:8080\n\n:: Nginx with certbot:\n:: server {\n::   listen 443 ssl;\n::   server_name app.domain.com;\n::   ssl_certificate /etc/letsencrypt/live/app.domain.com/fullchain.pem;\n::   ssl_certificate_key /etc/letsencrypt/live/app.domain.com/privkey.pem;\n::   location / { proxy_pass http://10.0.0.5:8080; }\n:: }",
+        "tags": ["reverse-proxy", "caddy", "nginx", "haproxy", "appliance", "ssl-offload", "auto-cert"]
+      },
+      {
+        "id": "cert-iis-bind",
+        "title": "Bind Certificate to IIS Site",
+        "desc": "After importing a renewed cert, bind it to your IIS site. Essential step often missed in manual renewal.",
+        "shell": "ps",
+        "cmd": "Import-Module WebAdministration\n$thumb = (Get-ChildItem Cert:\\LocalMachine\\My | Where-Object { $_.Subject -like '*domain.com*' } | Sort-Object NotAfter -Descending | Select-Object -First 1).Thumbprint\n\n# Remove old binding:\nGet-WebBinding -Name 'Default Web Site' -Protocol https | Remove-WebBinding\n\n# Add new binding:\nNew-WebBinding -Name 'Default Web Site' -Protocol https -Port 443 -HostHeader www.domain.com -SslFlags 1\n\n# Assign cert:\n(Get-WebBinding -Name 'Default Web Site' -Protocol https).AddSslCertificate($thumb, 'My')",
+        "tags": ["iis", "certificate", "bind", "ssl", "renewal", "web"]
+      },
+      {
+        "id": "cert-exchange-assign",
+        "title": "Assign Certificate to Exchange Services",
+        "desc": "After importing a renewed cert into Exchange, assign it to IIS, SMTP, and POP/IMAP services.",
+        "shell": "ps",
+        "cmd": "# Import the cert:\nImport-ExchangeCertificate -FileData ([System.IO.File]::ReadAllBytes('C:\\Certs\\exchange.pfx')) -Password (ConvertTo-SecureString 'P@ssw0rd' -AsPlainText -Force)\n\n# Get thumbprint of new cert:\nGet-ExchangeCertificate | Sort-Object NotAfter -Descending | Select-Object -First 3 | Format-List Subject, Thumbprint, NotAfter, Services\n\n# Assign to services:\nEnable-ExchangeCertificate -Thumbprint <THUMBPRINT> -Services IIS,SMTP,POP,IMAP -Force",
+        "tags": ["exchange", "certificate", "assign", "smtp", "iis", "renewal"]
+      },
+      {
+        "id": "cert-rdp-update",
+        "title": "Update RDP Certificate",
+        "desc": "Replace the self-signed RDP cert with a proper one. Stops the 'untrusted certificate' warning on RDP connections.",
+        "shell": "ps",
+        "cmd": "$thumb = (Get-ChildItem Cert:\\LocalMachine\\My | Where-Object { $_.Subject -like '*server.domain.com*' } | Sort-Object NotAfter -Descending | Select-Object -First 1).Thumbprint\n\n# Bind cert to RDP:\nwmic /namespace:\\\\root\\cimv2\\TerminalServices PATH Win32_TSGeneralSetting Set SSLCertificateSHA1Hash=\"$thumb\"",
+        "tags": ["rdp", "certificate", "ssl", "terminal-services", "renewal"]
+      },
+      {
+        "id": "cert-delete-expired",
+        "title": "Clean Up Expired Certificates",
+        "desc": "Remove expired certs from the local machine store. Keep your cert store tidy after renewals.",
+        "shell": "ps",
+        "cmd": "# List expired certs:\nGet-ChildItem Cert:\\LocalMachine\\My | Where-Object { $_.NotAfter -lt (Get-Date) } | Select-Object Subject, Thumbprint, NotAfter\n\n# Remove expired certs (use -WhatIf first!):\nGet-ChildItem Cert:\\LocalMachine\\My | Where-Object { $_.NotAfter -lt (Get-Date) } | Remove-Item -WhatIf",
+        "tags": ["certificate", "expired", "cleanup", "delete", "maintenance"]
+      },
+      {
+        "id": "cert-openssl-convert",
+        "title": "Convert Certificate Formats (OpenSSL)",
+        "desc": "Different apps need different formats. r/sysadmin's biggest cert headache. PEM ↔ PFX ↔ DER ↔ PKCS7 conversions.",
+        "shell": "cmd",
+        "cmd": ":: PEM to PFX (for IIS/Windows):\nopenssl pkcs12 -export -out cert.pfx -inkey private.key -in cert.pem -certfile chain.pem\n\n:: PFX to PEM (for Apache/Nginx):\nopenssl pkcs12 -in cert.pfx -out cert.pem -nodes\n\n:: DER to PEM:\nopenssl x509 -inform DER -in cert.der -out cert.pem\n\n:: Verify a certificate:\nopenssl x509 -in cert.pem -text -noout",
+        "tags": ["openssl", "convert", "pfx", "pem", "der", "pkcs12", "format"]
+      },
+      {
+        "id": "cert-adcs-template",
+        "title": "Request Cert from Internal CA (ADCS)",
+        "desc": "For internal services, use your own CA — not subject to public 47-day rules. Reddit recommends internal CA for anything not public-facing.",
+        "shell": "ps",
+        "cmd": "# Request cert from ADCS using a template:\n$params = @{\n    Template = 'WebServer'\n    DnsName = 'intranet.corp.local'\n    CertStoreLocation = 'Cert:\\LocalMachine\\My'\n}\nGet-Certificate @params\n\n# Or using certreq with enterprise CA:\n# certreq -new request.inf request.csr\n# certreq -submit -config \"CA01.corp.local\\Corp-CA\" request.csr response.cer",
+        "tags": ["adcs", "internal-ca", "template", "pki", "enterprise", "certificate"]
+      },
+      {
+        "id": "cert-monitor-nagios",
+        "title": "Certificate Expiry Monitoring (Alert Script)",
+        "desc": "Daily check that emails you when certs are within 30 days of expiry. Set as scheduled task. Based on top r/sysadmin monitoring recommendations.",
+        "shell": "ps",
+        "cmd": "$hosts = @(\n    @{Host='web01.domain.com'; Port=443},\n    @{Host='mail.domain.com'; Port=443},\n    @{Host='vpn.domain.com'; Port=443}\n)\n$warnDays = 30\n$alerts = @()\n$hosts | ForEach-Object {\n    try {\n        $tcp = New-Object Net.Sockets.TcpClient($_.Host, $_.Port)\n        $ssl = New-Object Net.Security.SslStream($tcp.GetStream())\n        $ssl.AuthenticateAsClient($_.Host)\n        $expiry = [datetime]::Parse($ssl.RemoteCertificate.GetExpirationDateString())\n        $daysLeft = ($expiry - (Get-Date)).Days\n        if ($daysLeft -le $warnDays) { $alerts += \"$($_.Host) expires in $daysLeft days ($expiry)\" }\n        $ssl.Dispose(); $tcp.Dispose()\n    } catch { $alerts += \"$($_.Host) - CONNECTION FAILED\" }\n}\nif ($alerts) {\n    Send-MailMessage -From 'certs@domain.com' -To 'admin@domain.com' -Subject 'CERT EXPIRY WARNING' -Body ($alerts -join \"`n\") -SmtpServer 'smtp.domain.com'\n}",
+        "tags": ["certificate", "monitor", "alert", "email", "expiry", "scheduled-task", "automation"]
+      },
+      {
+        "id": "cert-timeline-2026",
+        "title": "⚠️ TLS Cert Lifetime Reduction Timeline",
+        "desc": "CA/Browser Forum approved ballot SC-081. Plan NOW. Mar 2026: 200 days max → Mar 2027: 100 days → Mar 2029: 47 days. Automation is no longer optional.",
+        "shell": "ps",
+        "cmd": "# Quick reference — no command, just essential dates:\n# March 15, 2026: Max cert lifetime = 200 days (DCV reuse = 200 days)\n# March 15, 2027: Max cert lifetime = 100 days (DCV reuse = 100 days)\n# March 15, 2029: Max cert lifetime = 47 days  (DCV reuse = 10 days)\n#\n# Action items:\n# 1. Inventory ALL public certs (use cert-scan-multiple snippet)\n# 2. Implement ACME automation (win-acme, certbot, Posh-ACME)\n# 3. Move internal services to private CA (ADCS, step-ca)\n# 4. Front appliances with reverse proxy for cert offload\n# 5. Set up expiry monitoring & alerting\nWrite-Host '⚠️  As of March 15, 2026, max public TLS cert lifetime is 200 days.' -ForegroundColor Yellow\nWrite-Host '⚠️  Automate NOW or face operational nightmares.' -ForegroundColor Red",
+        "tags": ["47-day", "timeline", "cabforum", "sc-081", "planning", "automation", "warning"]
+      }
+    ]
   }
 ]
