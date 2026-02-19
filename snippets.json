@@ -1,0 +1,201 @@
+[
+  {
+    "category": "Networking & Connectivity",
+    "icon": "🌐",
+    "snippets": [
+      { "id":"check-ip", "title":"Check IP Configuration", "desc":"Display all IP configuration — IPs, subnet, gateway, DNS servers.", "shell":"cmd", "cmd":"ipconfig /all", "tags":["ip","adapter","dns","gateway","subnet"] },
+      { "id":"release-renew", "title":"Release & Renew IP (DHCP)", "desc":"Drop current DHCP lease and request a fresh one.", "shell":"cmd", "cmd":"ipconfig /release && ipconfig /renew", "tags":["dhcp","ip","renew","release"] },
+      { "id":"flush-dns", "title":"Flush DNS Cache", "desc":"Clear the local DNS resolver cache.", "shell":"cmd", "cmd":"ipconfig /flushdns", "tags":["dns","cache","flush"] },
+      { "id":"register-dns", "title":"Register DNS", "desc":"Force the client to re-register its DNS records.", "shell":"cmd", "cmd":"ipconfig /registerdns", "tags":["dns","register"] },
+      { "id":"ping-host", "title":"Ping a Host", "desc":"Test basic connectivity. Use -t for continuous ping.", "shell":"cmd", "cmd":"ping google.com\nping -t 10.0.0.1", "tags":["ping","connectivity","icmp"] },
+      { "id":"tracert", "title":"Trace Route", "desc":"Trace the network path to a destination, showing each hop.", "shell":"cmd", "cmd":"tracert google.com", "tags":["trace","route","hops","latency"] },
+      { "id":"nslookup", "title":"DNS Lookup (nslookup)", "desc":"Query DNS records. Specify record types with -type flag.", "shell":"cmd", "cmd":"nslookup google.com\nnslookup -type=mx google.com\nnslookup -type=txt google.com", "tags":["dns","domain","mx","txt","nslookup"] },
+      { "id":"resolve-dns", "title":"DNS Lookup (PowerShell)", "desc":"PowerShell-native DNS resolution. Great for MX, TXT, SRV records.", "shell":"ps", "cmd":"Resolve-DnsName google.com\nResolve-DnsName google.com -Type MX\nResolve-DnsName google.com -Type TXT", "tags":["dns","resolve","mx","txt"] },
+      { "id":"tnc", "title":"Test Port Connectivity", "desc":"The #1 most recommended command on r/sysadmin. Replaces telnet for port testing.", "shell":"ps", "cmd":"Test-NetConnection google.com -Port 443\nTest-NetConnection 10.0.0.5 -Port 3389\ntnc 10.0.0.5 -p 445", "tags":["port","telnet","tnc","firewall","connection","test"] },
+      { "id":"test-connection", "title":"Ping with Boolean Result", "desc":"Returns True/False — perfect for IF statements in scripts.", "shell":"ps", "cmd":"Test-Connection -ComputerName server01 -Quiet -Count 1", "tags":["ping","bool","script","test"] },
+      { "id":"netstat", "title":"Show Open Ports & Connections", "desc":"List active connections with process IDs.", "shell":"cmd", "cmd":"netstat -ano\nnetstat -ano | findstr :443\nnetstat -ano | findstr LISTENING", "tags":["ports","connections","netstat","listening","pid"] },
+      { "id":"find-port-process", "title":"Find Which Process Owns a Port", "desc":"Two-step: find the PID on a port, then identify the process.", "shell":"cmd", "cmd":"netstat -ano | findstr :8080\ntasklist | findstr <PID>", "tags":["port","process","pid","listening"] },
+      { "id":"netsh-trace", "title":"Network Packet Capture (No Wireshark)", "desc":"Built-in packet capture — no extra tools needed. Outputs .etl file.", "shell":"cmd", "cmd":"netsh trace start capture=yes\nnetsh trace stop", "tags":["capture","packet","trace","wireshark"] },
+      { "id":"wifi-password", "title":"Show Saved Wi-Fi Password", "desc":"Reveal the stored password for a Wi-Fi profile.", "shell":"cmd", "cmd":"netsh wlan show profile name=\"WiFiName\" key=clear", "tags":["wifi","password","wlan","wireless"] },
+      { "id":"tcp-listener", "title":"Open a TCP Listener (Test Firewall)", "desc":"Start a listener on a port to test inbound traffic — no tools needed.", "shell":"ps", "cmd":"$listener = [System.Net.Sockets.TcpListener]5666\n$listener.Start()\n# To stop:\n$listener.Stop()", "tags":["listener","tcp","firewall","test","port"] },
+      { "id":"get-netip", "title":"Get IP Configuration (PowerShell)", "desc":"Cleaner IP info than ipconfig.", "shell":"ps", "cmd":"Get-NetIPConfiguration\nGet-NetIPAddress | Format-Table", "tags":["ip","config","adapter"] },
+      { "id":"find-dcs", "title":"Find All Domain Controllers", "desc":"Discover DCs in the domain via DNS SRV records.", "shell":"cmd", "cmd":"nslookup -type=all _ldap._tcp.dc._msdcs.%userdnsdomain%\nnltest /dclist:DOMAINNAME", "tags":["dc","domain controller","ldap","ad"] },
+      { "id":"logon-server", "title":"Which DC Am I Authenticating To?", "desc":"See which domain controller handled your logon.", "shell":"cmd", "cmd":"echo %logonserver%", "tags":["dc","logon","domain controller"] }
+    ]
+  },
+  {
+    "category": "Active Directory & Users",
+    "icon": "👤",
+    "snippets": [
+      { "id":"whoami", "title":"Current Logged-in User", "desc":"Show the current username and domain.", "shell":"cmd", "cmd":"whoami", "tags":["user","whoami","login"] },
+      { "id":"get-aduser", "title":"Get AD User Details", "desc":"Pull all properties for a user. Bread and butter of AD mgmt.", "shell":"ps", "cmd":"Get-ADUser -Identity jsmith -Properties *\nGet-ADUser jsmith -Properties * | Select Name, EmailAddress, LastLogonDate, LockedOut, Enabled", "tags":["ad","user","properties"] },
+      { "id":"unlock-ad", "title":"Unlock AD Account", "desc":"Unlock a locked-out user. Find and unlock ALL locked accounts.", "shell":"ps", "cmd":"Unlock-ADAccount -Identity jsmith\n\n# Find & unlock ALL locked accounts:\nSearch-ADAccount -LockedOut | Unlock-ADAccount", "tags":["unlock","locked","account","helpdesk"] },
+      { "id":"enable-ad", "title":"Enable / Disable AD Account", "desc":"Quickly enable or disable a user account.", "shell":"ps", "cmd":"Enable-ADAccount -Identity jsmith\nDisable-ADAccount -Identity jsmith", "tags":["enable","disable","account","offboard"] },
+      { "id":"reset-pw", "title":"Reset AD Password", "desc":"Force-reset a user's password.", "shell":"ps", "cmd":"Set-ADAccountPassword -Identity jsmith -Reset -NewPassword (ConvertTo-SecureString \"TempP@ss123\" -AsPlainText -Force)\nSet-ADUser -Identity jsmith -ChangePasswordAtLogon $true", "tags":["password","reset","helpdesk"] },
+      { "id":"ad-locked-check", "title":"Check If User Is Locked & Why", "desc":"See lock status, bad password count, last logon, password expiry.", "shell":"ps", "cmd":"Get-ADUser jsmith -Properties * | Select Name, LockedOut, BadLogonCount, LastBadPasswordAttempt, LastLogonDate, PasswordExpired, PasswordLastSet", "tags":["locked","password","troubleshoot"] },
+      { "id":"ad-group-members", "title":"Get AD Group Members", "desc":"List all members of a security or distribution group.", "shell":"ps", "cmd":"Get-ADGroupMember -Identity \"Domain Admins\" | Select Name | Sort Name", "tags":["group","members","security"] },
+      { "id":"ad-user-groups", "title":"Get All Groups a User Belongs To", "desc":"See every group a user is a member of.", "shell":"ps", "cmd":"Get-ADPrincipalGroupMembership jsmith | Select Name | Sort Name", "tags":["groups","membership"] },
+      { "id":"ad-search", "title":"Search AD Users (Wildcard / LDAP)", "desc":"Find users with partial names using LDAP ANR.", "shell":"ps", "cmd":"Get-ADUser -Filter \"Name -like '*smith*'\"\nGet-ADUser -LDAPFilter '(anr=John Sm)'", "tags":["search","find","ldap"] },
+      { "id":"never-logged-in", "title":"Find Accounts Never Logged In", "desc":"Audit accounts that have never been used.", "shell":"ps", "cmd":"Get-ADUser -Filter * -Properties LastLogonDate | Where { $_.LastLogonDate -eq $null } | Select Name, SamAccountName, Enabled", "tags":["audit","stale","logon"] },
+      { "id":"all-computers", "title":"Export All AD Computers", "desc":"Dump every computer in AD to a CSV.", "shell":"ps", "cmd":"Get-ADComputer -Filter * -Properties * | Select Name, OperatingSystem, LastLogonDate, IPv4Address | Export-Csv C:\\ADComputers.csv -NoTypeInformation", "tags":["computers","export","csv","audit","inventory"] },
+      { "id":"protect-delete", "title":"Protect AD Objects From Deletion", "desc":"Prevent accidental deletion of users and OUs.", "shell":"ps", "cmd":"Get-ADObject -Filter {ObjectClass -eq 'user'} | Set-ADObject -ProtectedFromAccidentalDeletion $true\nGet-ADOrganizationalUnit -Filter * | Set-ADObject -ProtectedFromAccidentalDeletion $true", "tags":["protect","delete","accidental","ou"] },
+      { "id":"ad-sync", "title":"Force Azure AD / Entra Sync", "desc":"Trigger immediate delta sync instead of waiting 30 min. Run on AAD Connect server.", "shell":"ps", "cmd":"Import-Module ADSync\nStart-ADSyncSyncCycle -PolicyType Delta", "tags":["azure","entra","sync","hybrid","365"] },
+      { "id":"trust-repair", "title":"Fix Broken Domain Trust Relationship", "desc":"Repairs trust without disjoin/rejoin. One of the most praised fixes on r/sysadmin.", "shell":"ps", "cmd":"Test-ComputerSecureChannel -Repair -Credential DOMAIN\\admin\n\n# Alternative:\nReset-ComputerMachinePassword -Server DC01 -Credential DOMAIN\\admin", "tags":["trust","relationship","domain","broken","repair"] },
+      { "id":"gpupdate", "title":"Force Group Policy Update", "desc":"Immediately apply group policy changes.", "shell":"cmd", "cmd":"gpupdate\ngpupdate /force", "tags":["gpo","group policy","update"] },
+      { "id":"gpresult", "title":"View Applied Group Policies", "desc":"Generate an HTML report of all GPOs applied.", "shell":"cmd", "cmd":"gpresult /h C:\\gpreport.html\nstart C:\\gpreport.html", "tags":["gpo","report","rsop"] },
+      { "id":"net-user", "title":"List / Add Local Users", "desc":"Manage local user accounts.", "shell":"cmd", "cmd":"net user\nnet user /add NewUser P@ssw0rd && net localgroup administrators NewUser /add", "tags":["user","local","add","admin"] },
+      { "id":"repadmin", "title":"Force AD Replication", "desc":"Trigger immediate replication across all DCs.", "shell":"cmd", "cmd":"repadmin /syncall /APed", "tags":["replication","dc","sync"] }
+    ]
+  },
+  {
+    "category": "System Info & Hardware",
+    "icon": "💻",
+    "snippets": [
+      { "id":"sysinfo", "title":"Full System Information", "desc":"Detailed config: OS, hardware, hotfixes, boot time, network.", "shell":"cmd", "cmd":"systeminfo", "tags":["system","hardware","os","boot"] },
+      { "id":"remote-sysinfo", "title":"Remote System Info", "desc":"Query system info from a remote machine.", "shell":"cmd", "cmd":"systeminfo /s COMPUTERNAME", "tags":["remote","system"] },
+      { "id":"hostname", "title":"Get Computer Name", "desc":"Show this machine's hostname.", "shell":"cmd", "cmd":"hostname", "tags":["name","computer"] },
+      { "id":"serial-number", "title":"Get Serial Number / Service Tag", "desc":"Essential for warranty lookups. Works for Dell service tags too.", "shell":"both", "cmd":"wmic bios get serialnumber\n\n# PowerShell:\n(Get-CimInstance Win32_BIOS).SerialNumber\n\n# Remote:\nwmic /node:PCNAME bios get serialnumber", "tags":["serial","service tag","dell","warranty","bios"] },
+      { "id":"model", "title":"Get Computer Model", "desc":"Find the make and model of the hardware.", "shell":"both", "cmd":"wmic computersystem get model\n\n# PowerShell:\n(Get-CimInstance Win32_ComputerSystem).Model", "tags":["model","hardware","make"] },
+      { "id":"uptime", "title":"Check System Uptime / Last Boot", "desc":"When was this last rebooted? Perfect for catching liars.", "shell":"both", "cmd":"net stats workstation | find \"Statistics since\"\nwmic os get lastbootuptime\n\n# PowerShell:\n(Get-CimInstance Win32_OperatingSystem).LastBootUpTime", "tags":["uptime","boot","reboot","restart"] },
+      { "id":"why-reboot", "title":"Find Out Why System Rebooted", "desc":"Check Event Log for shutdown/reboot reason.", "shell":"ps", "cmd":"Get-WinEvent -FilterHashtable @{LogName='System'; ID=1074; ProviderName='User32'} -MaxEvents 5 | Format-List", "tags":["reboot","shutdown","reason","event log"] },
+      { "id":"os-version", "title":"Windows Version & Build", "desc":"Check OS version multiple ways.", "shell":"both", "cmd":"winver\nver\n\n# PowerShell:\n[System.Environment]::OSVersion\n$PSVersionTable.PSVersion", "tags":["version","build","windows"] },
+      { "id":"env-vars", "title":"List Environment Variables", "desc":"Show all environment variables.", "shell":"cmd", "cmd":"set\necho %USERPROFILE%\necho %APPDATA%\necho %TEMP%", "tags":["environment","variables","path","temp"] },
+      { "id":"hotfix", "title":"Check Installed Hotfixes", "desc":"List installed Windows updates.", "shell":"ps", "cmd":"Get-HotFix | Sort InstalledOn -Descending | Select HotFixID, InstalledOn, Description\nGet-HotFix -Id KB5034441", "tags":["hotfix","update","patch","kb"] },
+      { "id":"logged-user", "title":"Who Is Logged In Remotely?", "desc":"Check who is currently logged into a remote machine.", "shell":"cmd", "cmd":"query user /server:PCNAME\nwmic /node:PCNAME computersystem get username", "tags":["logged","user","remote","session"] },
+      { "id":"reliability", "title":"Reliability Monitor (Quick View)", "desc":"Instantly open Reliability Monitor — great overview of recent crashes.", "shell":"cmd", "cmd":"perfmon /rel", "tags":["reliability","crash","error","monitor"] },
+      { "id":"battery-report", "title":"Battery Health Report", "desc":"Generate a detailed HTML battery health report for laptops.", "shell":"cmd", "cmd":"powercfg /batteryreport\nstart %USERPROFILE%\\battery-report.html", "tags":["battery","health","laptop","power"] },
+      { "id":"msinfo", "title":"System Information GUI", "desc":"Open the detailed System Information panel.", "shell":"run", "cmd":"msinfo32", "tags":["info","system","gui","hardware"] }
+    ]
+  },
+  {
+    "category": "Processes & Services",
+    "icon": "⚙️",
+    "snippets": [
+      { "id":"tasklist", "title":"List Running Processes", "desc":"Show all processes. Pipe to findstr to filter.", "shell":"cmd", "cmd":"tasklist\ntasklist | findstr chrome", "tags":["process","task","running"] },
+      { "id":"taskkill", "title":"Kill a Process", "desc":"Force terminate by name or PID. Works remotely.", "shell":"cmd", "cmd":"taskkill /f /im notepad.exe\ntaskkill /f /pid 1234\ntaskkill /s PCNAME /im chrome.exe /f", "tags":["kill","terminate","process","remote"] },
+      { "id":"get-process", "title":"List / Kill Processes (PowerShell)", "desc":"View and manage processes the PowerShell way.", "shell":"ps", "cmd":"Get-Process\nGet-Process -Name chrome\nStop-Process -Name notepad -Force", "tags":["process","stop","kill"] },
+      { "id":"service-restart", "title":"Restart a Service", "desc":"Stop and start a service.", "shell":"both", "cmd":"net stop \"Spooler\" & net start \"Spooler\"\n\n# PowerShell:\nRestart-Service -Name Spooler -Force", "tags":["service","restart","stop","start","spooler"] },
+      { "id":"remote-service", "title":"Manage Services Remotely", "desc":"Query or restart services on remote machines.", "shell":"ps", "cmd":"Get-Service -ComputerName SERVER01 -Name Spooler\nGet-Service -ComputerName SERVER01 -Name Spooler | Restart-Service", "tags":["service","remote","restart"] },
+      { "id":"connections-by-process", "title":"Count Connections Per Process", "desc":"Which process has the most connections? Great for troubleshooting.", "shell":"ps", "cmd":"Get-NetTCPConnection | Group-Object -Property State, OwningProcess | Select Count, Name, @{Name='ProcessName';Expression={(Get-Process -PID ($_.Name.Split(',')[-1].Trim(' '))).Name}} | Sort Count -Descending", "tags":["connections","process","tcp","network"] }
+    ]
+  },
+  {
+    "category": "File System & Disk",
+    "icon": "📁",
+    "snippets": [
+      { "id":"disk-space", "title":"Check Disk Space", "desc":"Show free/used space on all drives.", "shell":"both", "cmd":"wmic logicaldisk get caption,size,freespace\n\n# PowerShell:\nGet-CimInstance Win32_LogicalDisk | Select DeviceID, @{N='SizeGB';E={[math]::Round($_.Size/1GB)}}, @{N='FreeGB';E={[math]::Round($_.FreeSpace/1GB)}}", "tags":["disk","space","storage","free"] },
+      { "id":"search-file", "title":"Search for a File", "desc":"Recursively find files by name across a drive.", "shell":"both", "cmd":"dir /s /b \"C:\\filename.txt\"\n\n# PowerShell:\nGet-ChildItem -Path C:\\ -Recurse -Filter \"*.log\" -ErrorAction SilentlyContinue", "tags":["search","find","file","recursive"] },
+      { "id":"robocopy", "title":"Copy Files Fast (Robocopy)", "desc":"Gold standard for file copying. Handles retries, logging, mirroring.", "shell":"cmd", "cmd":"robocopy \"C:\\Source\" \"D:\\Dest\" /e /r:0 /w:0\nrobocopy \"C:\\Source\" \"D:\\Dest\" /mir /log:C:\\robolog.txt", "tags":["copy","robocopy","mirror","backup"] },
+      { "id":"chkdsk", "title":"Check Disk for Errors", "desc":"Scan and repair file system errors. Requires admin.", "shell":"cmd", "cmd":"chkdsk C: /f /r", "tags":["chkdsk","repair","errors","disk"] },
+      { "id":"filehash", "title":"Get File Hash", "desc":"Calculate SHA256/MD5 hash. Essential for verifying downloads.", "shell":"ps", "cmd":"Get-FileHash C:\\file.exe -Algorithm SHA256\nGet-FileHash C:\\file.exe -Algorithm MD5", "tags":["hash","sha256","md5","verify","integrity"] },
+      { "id":"export-csv", "title":"Export Anything to CSV", "desc":"Pipe any output to a spreadsheet-ready CSV.", "shell":"ps", "cmd":"Get-Process | Export-Csv C:\\processes.csv -NoTypeInformation", "tags":["csv","export","spreadsheet","excel"] },
+      { "id":"smb-unlock", "title":"Unlock SMB-Locked Files", "desc":"Force-close files locked by SMB when the client is gone.", "shell":"ps", "cmd":"Get-SmbOpenFile\nClose-SmbOpenFile -FileId 12345 -Force", "tags":["smb","locked","file","share"] },
+      { "id":"tree", "title":"Directory Tree View", "desc":"Display folder structure as a visual tree.", "shell":"cmd", "cmd":"tree /f", "tags":["tree","folder","structure"] },
+      { "id":"open-explorer", "title":"Open Explorer at Current Dir", "desc":"Quick shortcut from terminal.", "shell":"ps", "cmd":"Invoke-Item .\n# Alias:\nii .", "tags":["explorer","open","folder"] }
+    ]
+  },
+  {
+    "category": "Firewall & Security",
+    "icon": "🛡️",
+    "snippets": [
+      { "id":"fw-status", "title":"Check Firewall Status", "desc":"See if Windows Firewall is enabled on all profiles.", "shell":"cmd", "cmd":"netsh advfirewall show allprofiles state", "tags":["firewall","status"] },
+      { "id":"fw-toggle", "title":"Enable / Disable Firewall", "desc":"Turn firewall on or off. Requires admin.", "shell":"cmd", "cmd":"netsh advfirewall set allprofiles state off\nnetsh advfirewall set allprofiles state on", "tags":["firewall","disable","enable"] },
+      { "id":"fw-rule", "title":"Add Firewall Rule (CMD)", "desc":"Allow inbound traffic on a port.", "shell":"cmd", "cmd":"netsh advfirewall firewall add rule name=\"Allow 8080\" dir=in action=allow protocol=TCP localport=8080", "tags":["firewall","rule","port","allow"] },
+      { "id":"fw-rules-ps", "title":"Manage Firewall Rules (PowerShell)", "desc":"View and create rules with PowerShell.", "shell":"ps", "cmd":"Get-NetFirewallRule | Where Enabled -eq True | Select Name, Direction, Action\nNew-NetFirewallRule -DisplayName \"Allow 8080\" -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow", "tags":["firewall","rules","netfirewall"] },
+      { "id":"sfc", "title":"System File Checker (SFC)", "desc":"Scan and repair protected system files.", "shell":"cmd", "cmd":"sfc /scannow", "tags":["sfc","repair","integrity","corrupt"] },
+      { "id":"dism", "title":"DISM Repair Component Store", "desc":"Repair Windows component store. Run before SFC if SFC fails.", "shell":"cmd", "cmd":"DISM /Online /Cleanup-Image /RestoreHealth", "tags":["dism","repair","component","health"] },
+      { "id":"bitlocker", "title":"Pause / Resume BitLocker", "desc":"Suspend BitLocker before maintenance reboots.", "shell":"ps", "cmd":"Suspend-BitLocker -MountPoint \"C:\" -RebootCount 1\nResume-BitLocker -MountPoint \"C:\"", "tags":["bitlocker","suspend","encryption"] },
+      { "id":"execution-policy", "title":"Set Execution Policy", "desc":"Allow scripts to run. Use -Scope Process for temp bypass.", "shell":"ps", "cmd":"Set-ExecutionPolicy Bypass -Scope Process\npowershell.exe -ExecutionPolicy Bypass -File script.ps1", "tags":["execution","policy","bypass","script"] }
+    ]
+  },
+  {
+    "category": "Remote Management",
+    "icon": "🖥️",
+    "snippets": [
+      { "id":"rdp", "title":"Remote Desktop (RDP)", "desc":"Launch RDP from command line.", "shell":"run", "cmd":"mstsc /v:SERVER01", "tags":["rdp","remote desktop","mstsc"] },
+      { "id":"enter-pssession", "title":"Remote PowerShell Session", "desc":"Open interactive PS session on a remote machine. SSH for Windows.", "shell":"ps", "cmd":"Enter-PSSession -ComputerName SERVER01\n$cred = Get-Credential\nEnter-PSSession -ComputerName SERVER01 -Credential $cred", "tags":["remote","pssession","ssh","session"] },
+      { "id":"invoke-command", "title":"Run Command on Remote Machine(s)", "desc":"Execute remotely without interactive session. Works on multiple machines.", "shell":"ps", "cmd":"Invoke-Command -ComputerName SERVER01 -ScriptBlock { Get-Service }\nInvoke-Command -ComputerName SERVER01,SERVER02 -ScriptBlock { hostname }\nInvoke-Command -ComputerName SERVER01 -FilePath C:\\Scripts\\fix.ps1", "tags":["remote","invoke","command","servers"] },
+      { "id":"restart-remote", "title":"Restart a Remote Machine", "desc":"Reboot a machine across the network.", "shell":"both", "cmd":"shutdown /r /t 0 /m \\\\SERVER01\n\n# PowerShell:\nRestart-Computer -ComputerName SERVER01 -Force", "tags":["restart","reboot","remote"] },
+      { "id":"runas-admin", "title":"Launch PowerShell as Admin", "desc":"Elevate to admin from an existing session.", "shell":"ps", "cmd":"Start-Process powershell -Verb RunAs", "tags":["admin","elevate","runas","uac"] },
+      { "id":"remote-wmic", "title":"Query Remote Machine (WMIC)", "desc":"Query WMI data remotely without logging in.", "shell":"cmd", "cmd":"wmic /node:PCNAME bios get serialnumber\nwmic /node:PCNAME os get lastbootuptime\nwmic /node:PCNAME computersystem get username", "tags":["wmic","remote","serial","uptime"] }
+    ]
+  },
+  {
+    "category": "PowerShell Essentials",
+    "icon": "⚡",
+    "snippets": [
+      { "id":"get-help", "title":"Get-Help", "desc":"#1 tip from every PS thread. Learn this first, figure out everything else.", "shell":"ps", "cmd":"Get-Help Get-Service\nGet-Help Get-Service -Examples\nGet-Help Get-Service -Online\nGet-Help *network*", "tags":["help","learn","documentation"] },
+      { "id":"get-command", "title":"Find a Command", "desc":"Search for commands by keyword.", "shell":"ps", "cmd":"Get-Command *service*\nGet-Command -Module ActiveDirectory", "tags":["find","command","search"] },
+      { "id":"get-member", "title":"Inspect Object Properties", "desc":"Pipe anything to Get-Member to see properties and methods.", "shell":"ps", "cmd":"Get-Process | Get-Member\nGet-Service | gm", "tags":["member","properties","methods","object"] },
+      { "id":"out-gridview", "title":"Out-GridView (Visual Table)", "desc":"Pop results into a sortable, filterable GUI window.", "shell":"ps", "cmd":"Get-Process | Out-GridView\nGet-EventLog Application -EntryType Error -Newest 250 | Out-GridView", "tags":["gridview","gui","table","visual"] },
+      { "id":"pipe-clip", "title":"Pipe Output to Clipboard", "desc":"Copy output directly to clipboard.", "shell":"both", "cmd":"ipconfig /all | clip\n\n# PowerShell:\nGet-Process | Set-Clipboard\nGet-Clipboard", "tags":["clipboard","copy","clip","pipe"] },
+      { "id":"format-list", "title":"View All Properties", "desc":"See every property and its value.", "shell":"ps", "cmd":"Get-Service Spooler | Format-List *\nGet-Service Spooler | Select *", "tags":["format","list","properties","detail"] },
+      { "id":"whatif", "title":"-WhatIf (Dry Run)", "desc":"Preview what a command WOULD do without executing.", "shell":"ps", "cmd":"Remove-Item C:\\Temp\\* -Recurse -WhatIf\nStop-Service -Name Spooler -WhatIf", "tags":["whatif","preview","safety","test"] },
+      { "id":"group-object", "title":"Count & Group Objects", "desc":"Aggregate data — like a quick SQL GROUP BY.", "shell":"ps", "cmd":"Get-ADComputer -Filter * -Property OperatingSystem | Group-Object OperatingSystem | Sort Count -Descending", "tags":["group","count","aggregate","statistics"] },
+      { "id":"foreach", "title":"Loop Through Items (ForEach)", "desc":"Process multiple items. Backbone of scripting.", "shell":"ps", "cmd":"\"SRV01\",\"SRV02\",\"SRV03\" | ForEach-Object {\n    Test-Connection $_ -Count 1 -Quiet\n}", "tags":["foreach","loop","iterate","script"] },
+      { "id":"mac-convert", "title":"Convert MAC Address Format", "desc":"Swap dashes to colons in a copied MAC address.", "shell":"ps", "cmd":"(Get-Clipboard).Replace('-',':') | Set-Clipboard", "tags":["mac","address","convert"] }
+    ]
+  },
+  {
+    "category": "Run Commands & Shortcuts",
+    "icon": "🏃",
+    "snippets": [
+      { "id":"run-appwiz", "title":"Programs & Features", "desc":"Add/Remove Programs — the fast way.", "shell":"run", "cmd":"appwiz.cpl", "tags":["uninstall","programs","features"] },
+      { "id":"run-ncpa", "title":"Network Adapter Settings", "desc":"Jump to network adapter config.", "shell":"run", "cmd":"ncpa.cpl", "tags":["network","adapter","nic"] },
+      { "id":"run-sysdm", "title":"System Properties", "desc":"Computer name, domain join, env vars.", "shell":"run", "cmd":"sysdm.cpl", "tags":["system","properties","domain"] },
+      { "id":"run-services", "title":"Services Manager", "desc":"Open Services console.", "shell":"run", "cmd":"services.msc", "tags":["services","manager"] },
+      { "id":"run-devmgmt", "title":"Device Manager", "desc":"Troubleshoot hardware and drivers.", "shell":"run", "cmd":"devmgmt.msc", "tags":["device","manager","driver"] },
+      { "id":"run-eventvwr", "title":"Event Viewer", "desc":"Open Event Viewer for logs.", "shell":"run", "cmd":"eventvwr.msc", "tags":["event","viewer","logs"] },
+      { "id":"run-regedit", "title":"Registry Editor", "desc":"Open the registry editor.", "shell":"run", "cmd":"regedit", "tags":["registry","regedit"] },
+      { "id":"run-gpedit", "title":"Group Policy Editor", "desc":"Local GPO editor (Pro/Enterprise only).", "shell":"run", "cmd":"gpedit.msc", "tags":["group policy","gpo"] },
+      { "id":"run-certmgr", "title":"Certificate Manager", "desc":"User certs and machine certs.", "shell":"run", "cmd":"certmgr.msc\ncertlm.msc", "tags":["certificate","ssl","tls"] },
+      { "id":"run-secpol", "title":"Local Security Policy", "desc":"Audit policies, user rights, security options.", "shell":"run", "cmd":"secpol.msc", "tags":["security","policy","audit"] },
+      { "id":"run-printers", "title":"Devices and Printers", "desc":"Quick printer management.", "shell":"run", "cmd":"control printers", "tags":["printer","devices"] },
+      { "id":"run-temp", "title":"Open Temp Folder", "desc":"Navigate to temp directory for cleanup.", "shell":"run", "cmd":"%temp%", "tags":["temp","cleanup"] },
+      { "id":"run-cleanmgr", "title":"Disk Cleanup", "desc":"Free up space with the cleanup wizard.", "shell":"run", "cmd":"cleanmgr\ncleanmgr /lowdisk", "tags":["cleanup","disk","space"] }
+    ]
+  },
+  {
+    "category": "Power & Maintenance",
+    "icon": "🔌",
+    "snippets": [
+      { "id":"shutdown-now", "title":"Shutdown Immediately", "desc":"Instant shutdown bypassing update delay.", "shell":"cmd", "cmd":"shutdown /s /t 0", "tags":["shutdown","power","off"] },
+      { "id":"restart-now", "title":"Restart Immediately", "desc":"Instant reboot — essential via RDP.", "shell":"cmd", "cmd":"shutdown /r /t 0", "tags":["restart","reboot"] },
+      { "id":"shutdown-remote", "title":"Shutdown / Restart Remote PC", "desc":"Remote power with custom message.", "shell":"cmd", "cmd":"shutdown /r /f /m \\\\PCNAME /t 5 /c \"Maintenance reboot\"", "tags":["shutdown","remote","force"] },
+      { "id":"shutdown-cancel", "title":"Cancel Scheduled Shutdown", "desc":"Abort a pending shutdown.", "shell":"cmd", "cmd":"shutdown /a", "tags":["cancel","abort","shutdown"] },
+      { "id":"lock-pc", "title":"Lock the Workstation", "desc":"Instantly lock the screen.", "shell":"cmd", "cmd":"rundll32.exe user32.dll,LockWorkStation", "tags":["lock","workstation"] },
+      { "id":"disable-sleep", "title":"Disable Sleep Mode", "desc":"Prevent machine from sleeping.", "shell":"cmd", "cmd":"powercfg -x -standby-timeout-ac 0", "tags":["sleep","standby","power"] },
+      { "id":"disable-hibernate", "title":"Disable Hibernation (Reclaim Space)", "desc":"Deletes hiberfil.sys — frees disk space equal to RAM.", "shell":"cmd", "cmd":"powercfg -h off", "tags":["hibernate","hiberfil","disk","space"] },
+      { "id":"time-sync", "title":"Force Time Sync", "desc":"Resync clock with domain/NTP server.", "shell":"cmd", "cmd":"w32tm /resync", "tags":["time","sync","ntp","clock"] },
+      { "id":"installed-software", "title":"List Installed Software (Safe)", "desc":"Registry method — avoids Win32_Product MSI reconfiguration.", "shell":"ps", "cmd":"Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select DisplayName, DisplayVersion, Publisher, InstallDate | Sort DisplayName | Format-Table -AutoSize", "tags":["software","installed","inventory","registry"] },
+      { "id":"remove-bloat", "title":"Remove Windows Bloatware", "desc":"List and remove pre-installed Store apps.", "shell":"ps", "cmd":"Get-AppxPackage -AllUsers | Select Name | Sort Name\nGet-AppxPackage *xbox* | Remove-AppxPackage", "tags":["bloatware","appx","remove","store","cleanup"] },
+      { "id":"get-printer", "title":"Manage Printers & Print Queue", "desc":"View printers, manage stuck jobs.", "shell":"ps", "cmd":"Get-Printer\nGet-PrintJob -PrinterName \"HP LaserJet\"\nRemove-PrintJob -PrinterName \"HP LaserJet\" -ID 1", "tags":["printer","print","queue","job"] }
+    ]
+  },
+  {
+    "category": "Troubleshooting Codes",
+    "icon": "🔴",
+    "snippets": [
+      { "id":"bsod-critical", "title":"BSOD: CRITICAL_PROCESS_DIED (0x000000EF)", "desc":"A vital Windows process stopped unexpectedly. Often caused by corrupted system files or bad drivers.", "shell":"cmd", "cmd":"sfc /scannow\nDISM /Online /Cleanup-Image /RestoreHealth\n\n:: Boot into Safe Mode if unbootable:\nbcdedit /set {default} safeboot minimal", "tags":["bsod","critical","process","died","0x000000EF","blue screen"] },
+      { "id":"bsod-memory", "title":"BSOD: MEMORY_MANAGEMENT (0x0000001A)", "desc":"Bad RAM, faulty driver, or corrupt system file. Run memory diagnostic.", "shell":"cmd", "cmd":"mdsched.exe\n:: Reboots and runs memory test\n\nsfc /scannow\nDISM /Online /Cleanup-Image /RestoreHealth", "tags":["bsod","memory","management","ram","0x0000001A","blue screen"] },
+      { "id":"bsod-irql", "title":"BSOD: IRQL_NOT_LESS_OR_EQUAL (0x0000000A)", "desc":"Driver trying to access invalid memory. Usually a driver conflict.", "shell":"cmd", "cmd":":: Check recently installed drivers:\ndriverquery /v | sort /r\n\nverifier /standard /all\n:: Reboots into Driver Verifier mode\n\n:: Disable after testing:\nverifier /reset", "tags":["bsod","irql","driver","0x0000000A","blue screen"] },
+      { "id":"bsod-page-fault", "title":"BSOD: PAGE_FAULT_IN_NONPAGED_AREA (0x00000050)", "desc":"Memory problem — faulty RAM or corrupt system file.", "shell":"cmd", "cmd":"mdsched.exe\nchkdsk C: /f /r\nsfc /scannow", "tags":["bsod","page fault","memory","0x00000050","blue screen"] },
+      { "id":"bsod-kmode", "title":"BSOD: KMODE_EXCEPTION_NOT_HANDLED (0x0000001E)", "desc":"Kernel mode exception from a faulty driver or incompatible hardware.", "shell":"cmd", "cmd":"sfc /scannow\nDISM /Online /Cleanup-Image /RestoreHealth\n\n:: Check problem drivers:\ndriverquery /v /fo list > C:\\drivers.txt", "tags":["bsod","kmode","kernel","driver","0x0000001E","blue screen"] },
+      { "id":"bsod-system-service", "title":"BSOD: SYSTEM_SERVICE_EXCEPTION (0x0000003B)", "desc":"Driver or system service faulted. Common with GPU drivers.", "shell":"cmd", "cmd":":: Update GPU drivers first\n:: Then:\nsfc /scannow\nDISM /Online /Cleanup-Image /RestoreHealth\nchkdsk C: /f /r", "tags":["bsod","system service","exception","gpu","0x0000003B","blue screen"] },
+      { "id":"bsod-video-tdr", "title":"BSOD: VIDEO_TDR_FAILURE (0x00000116)", "desc":"GPU driver crashed and failed to recover. Reinstall display driver.", "shell":"cmd", "cmd":":: Uninstall current GPU driver, reinstall latest\npnputil /enum-drivers\n\n:: Force generic driver:\npnputil /delete-driver oem##.inf /uninstall", "tags":["bsod","video","tdr","gpu","display","0x00000116","blue screen"] },
+      { "id":"bsod-inaccessible-boot", "title":"BSOD: INACCESSIBLE_BOOT_DEVICE (0x0000007B)", "desc":"Windows can't access the boot drive. Common after cloning or BIOS changes.", "shell":"cmd", "cmd":":: From Recovery Command Prompt:\nbootrec /fixmbr\nbootrec /fixboot\nbootrec /rebuildbcd\nchkdsk C: /f /r", "tags":["bsod","inaccessible","boot","device","0x0000007B","blue screen","clone"] },
+      { "id":"bsod-whea", "title":"BSOD: WHEA_UNCORRECTABLE_ERROR (0x00000124)", "desc":"Hardware error — usually CPU, RAM, or SSD. Check temps and run diagnostics.", "shell":"cmd", "cmd":"mdsched.exe\nchkdsk C: /f /r\n:: Check CPU temps in BIOS\n:: Run manufacturer hardware diagnostics", "tags":["bsod","whea","hardware","cpu","0x00000124","blue screen"] },
+      { "id":"bsod-ntfs", "title":"BSOD: NTFS_FILE_SYSTEM (0x00000024)", "desc":"File system corruption or disk failure.", "shell":"cmd", "cmd":"chkdsk C: /f /r\nsfc /scannow\nDISM /Online /Cleanup-Image /RestoreHealth", "tags":["bsod","ntfs","file system","disk","0x00000024","blue screen"] },
+      { "id":"err-trust", "title":"Error: Trust Relationship Failed", "desc":"\"The trust relationship between this workstation and the primary domain failed.\"", "shell":"ps", "cmd":":: Log in with local admin, then:\nTest-ComputerSecureChannel -Repair -Credential DOMAIN\\admin\n\n:: Alternative:\nReset-ComputerMachinePassword -Server DC01 -Credential DOMAIN\\admin", "tags":["trust","relationship","domain","error","logon"] },
+      { "id":"err-rpc", "title":"Error: RPC Server Is Unavailable (0x800706BA)", "desc":"Firewall blocking, service not running, or DNS issue.", "shell":"cmd", "cmd":":: Check if target is reachable:\nping TARGETPC\nnslookup TARGETPC\n\n:: Check RPC service:\nsc \\\\TARGETPC query RpcSs\n\n:: Check firewall:\nnetsh advfirewall firewall show rule name=all | findstr \"Remote\"", "tags":["rpc","unavailable","0x800706BA","firewall","dns","error"] },
+      { "id":"err-dns", "title":"Error: DNS Name Does Not Exist (0x0000232B)", "desc":"DNS resolution failure. Check DNS server, flush cache, check suffix.", "shell":"cmd", "cmd":"ipconfig /flushdns\nipconfig /registerdns\nnslookup problematic-host.domain.com\n\n:: Check DNS servers:\nipconfig /all | findstr \"DNS\"", "tags":["dns","name","resolution","0x0000232B","error"] },
+      { "id":"err-access-denied", "title":"Error: Access Denied (0x80070005)", "desc":"Permission issue. Check share and NTFS permissions, UAC, or group membership.", "shell":"ps", "cmd":"whoami /groups\nicacls \"C:\\path\\to\\folder\"\n\n# Check share permissions:\nGet-SmbShareAccess -Name \"ShareName\"", "tags":["access","denied","0x80070005","permission","ntfs","error"] },
+      { "id":"err-wupdate", "title":"Windows Update Errors (General Fix)", "desc":"Nuclear option for Windows Update failures.", "shell":"cmd", "cmd":"net stop wuauserv\nnet stop cryptSvc\nnet stop bits\nnet stop msiserver\nren C:\\Windows\\SoftwareDistribution SoftwareDistribution.old\nren C:\\Windows\\System32\\catroot2 catroot2.old\nnet start wuauserv\nnet start cryptSvc\nnet start bits\nnet start msiserver", "tags":["windows update","error","fix","wuauserv","stuck","0x80070002","0x80244019"] },
+      { "id":"err-activation", "title":"Windows Activation Issues", "desc":"Check and troubleshoot activation status.", "shell":"cmd", "cmd":"slmgr /xpr\nslmgr /dlv\nslmgr /ato\n\n:: If KMS:\nslmgr /skms kmsserver.domain.com\nslmgr /ato", "tags":["activation","license","kms","slmgr","error"] },
+      { "id":"err-outlook-profile", "title":"Outlook Won't Open / Profile Corrupt", "desc":"Reset Outlook profile, clear cache, repair.", "shell":"cmd", "cmd":":: Reset navigation pane:\noutlook.exe /resetnavpane\n\n:: Start in safe mode:\noutlook.exe /safe\n\n:: Create new profile:\ncontrol mlcfg32.cpl", "tags":["outlook","profile","corrupt","crash","email","error"] },
+      { "id":"err-print-spooler", "title":"Print Spooler Stuck / Crashed", "desc":"Clear jammed print queue and restart spooler.", "shell":"cmd", "cmd":"net stop spooler\ndel /Q /F /S \"%systemroot%\\System32\\spool\\PRINTERS\\*.*\"\nnet start spooler", "tags":["print","spooler","stuck","queue","error","printer"] },
+      { "id":"err-disk-100", "title":"100% Disk Usage Fix", "desc":"Common Windows 10/11 issue. Disable known offenders.", "shell":"cmd", "cmd":":: Disable Superfetch/SysMain:\nsc stop SysMain\nsc config SysMain start=disabled\n\n:: Disable Windows Search indexing:\nsc stop WSearch\nsc config WSearch start=disabled\n\n:: Check disk health:\nwmic diskdrive get status\nchkdsk C: /f /r", "tags":["disk","100%","usage","slow","sysmain","superfetch","error"] },
+      { "id":"err-event-log", "title":"Query Specific Event Log Errors", "desc":"Pull recent errors from Event Log for troubleshooting.", "shell":"ps", "cmd":"Get-EventLog -LogName System -EntryType Error -Newest 20\nGet-EventLog -LogName Application -EntryType Error -Newest 20\n\n# Search for specific event ID:\nGet-WinEvent -FilterHashtable @{LogName='System'; ID=7031} -MaxEvents 10 | Format-List", "tags":["event","log","error","troubleshoot","viewer"] }
+    ]
+  }
+]
